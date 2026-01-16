@@ -28,41 +28,8 @@ jobs:
       - name: Validate composer.json
         run: composer validate --strict
 
-  build:
-    name: Build & Install
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, intl, pdo_mysql, bcmath
-          coverage: none
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
-
-      - name: Generate JWT keys
-        run: |
-          mkdir -p config/jwt
-          openssl genrsa -out config/jwt/private.pem -passout pass:b84fc9f4ec50346882262e2c99d0dd14816ee8c1861a91ba4df1ab80942eba04 2048
-          openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:b84fc9f4ec50346882262e2c99d0dd14816ee8c1861a91ba4df1ab80942eba04
-
-      - name: Upload Vendor & Keys
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-build
-          path: |
-            vendor/
-            config/jwt/
-          retention-days: 1
-
   coding-standards:
     name: Coding Standards (PHP CS Fixer)
-    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -75,17 +42,23 @@ jobs:
           extensions: mbstring, intl
           coverage: none
 
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
         with:
-          name: app-build
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
       - name: Check Coding Standards
         run: composer cs-check
 
   static-analysis:
     name: Static Analysis (PHPStan)
-    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -98,17 +71,23 @@ jobs:
           extensions: mbstring, intl, pdo_mysql
           coverage: none
 
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
         with:
-          name: app-build
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
       - name: Run PHPStan
         run: composer phpstan
 
   tests:
     name: Tests (PHPUnit)
-    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -121,10 +100,25 @@ jobs:
           extensions: mbstring, intl, pdo_mysql, bcmath
           coverage: none
 
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
+      - name: Cache Composer packages
+        id: composer-cache
+        uses: actions/cache@v4
         with:
-          name: app-build
+          path: vendor
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Generate JWT keys
+        env:
+          JWT_PASSPHRASE: ${{ secrets.JWT_PASSPHRASE }}
+        run: |
+          mkdir -p config/jwt
+          openssl genrsa -out config/jwt/private.pem -passout pass:$JWT_PASSPHRASE 2048
+          openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:$JWT_PASSPHRASE
 
       - name: Run Tests
         run: composer test
