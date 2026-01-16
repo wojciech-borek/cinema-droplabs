@@ -21,3 +21,21 @@ phpstan.neon
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+###> phpunit/phpunit ###
+.phpunit.result.cache
+/phpunit.xml
+###< phpunit/phpunit ###
+
+###> common ###
+.DS_Store
+Thumbs.db
+###< common ###
+
+###> jetbrains/phpstorm ###
+.idea/
+###< jetbrains/phpstorm ###
+
+###> visualstudio/vscode ###
+.vscode/
+###< visualstudio/vscode ###
