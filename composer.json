@@ -1,4 +1,6 @@
 {
+    "name": "wojbor/cinema-droplabs",
+    "description": "Cinema management system for DropLabs",
     "type": "project",
     "license": "proprietary",
     "minimum-stability": "stable",
@@ -7,15 +9,15 @@
         "php": ">=8.4",
         "ext-ctype": "*",
         "ext-iconv": "*",
-        "doctrine/doctrine-bundle": "^3.2",
+        "doctrine/doctrine-bundle": "^3.2.2",
         "doctrine/doctrine-migrations-bundle": "^4.0",
-        "doctrine/orm": "^3.6",
+        "doctrine/orm": "^3.6.1",
         "lexik/jwt-authentication-bundle": "^3.2",
-        "nelmio/api-doc-bundle": "^5.9",
-        "nelmio/cors-bundle": "^2.6",
+        "nelmio/api-doc-bundle": "^5.9.2",
+        "nelmio/cors-bundle": "^2.6.1",
         "symfony/console": "8.0.*",
         "symfony/dotenv": "8.0.*",
-        "symfony/flex": "^2",
+        "symfony/flex": "^2.10",
         "symfony/framework-bundle": "8.0.*",
         "symfony/runtime": "8.0.*",
         "symfony/serializer": "8.0.*",
@@ -68,7 +70,7 @@
         "phpstan": "phpstan analyse --memory-limit=1G",
         "cs-check": "php-cs-fixer fix --dry-run --diff",
         "cs-fix": "php-cs-fixer fix",
-        "test": "vendor/bin/simple-phpunit",
+        "test": "vendor/bin/phpunit",
         "check": [
             "@phpstan",
             "@cs-check",
@@ -85,11 +87,12 @@
         }
     },
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "*",
-        "phpstan/extension-installer": "^1.4",
-        "phpstan/phpstan": "^2.1",
-        "phpstan/phpstan-doctrine": "^2.0",
-        "phpstan/phpstan-symfony": "^2.0",
-        "symfony/phpunit-bridge": "^8.0"
+        "friendsofphp/php-cs-fixer": ">=3.92.5",
+        "phpstan/extension-installer": "^1.4.3",
+        "phpstan/phpstan": "^2.1.33",
+        "phpstan/phpstan-doctrine": "^2.0.12",
+        "phpstan/phpstan-symfony": "^2.0.9",
+        "phpunit/phpunit": "^11.5.47",
+        "symfony/phpunit-bridge": "^8.0.3"
     }
 }

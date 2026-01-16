@@ -28,70 +28,8 @@ jobs:
       - name: Validate composer.json
         run: composer validate --strict
 
-  coding-standards:
-    name: Coding Standards (PHP CS Fixer)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, intl
-          coverage: none
-
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress
-
-      - name: Check Coding Standards
-        run: composer cs-check
-
-  static-analysis:
-    name: Static Analysis (PHPStan)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, intl, pdo_mysql
-          coverage: none
-
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install dependencies
-        run: composer install --no-interaction --no-progress
-
-      - name: Run PHPStan
-        run: composer phpstan
-
-  tests:
-    name: Tests (PHPUnit)
+  build:
+    name: Build & Install
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -104,25 +42,89 @@ jobs:
           extensions: mbstring, intl, pdo_mysql, bcmath
           coverage: none
 
-      - name: Get Composer Cache Directory
-        id: composer-cache
-        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-
-      - name: Cache dependencies
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.composer-cache.outputs.dir }}
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
       - name: Install dependencies
-        run: composer install --no-interaction --no-progress
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
       - name: Generate JWT keys
         run: |
           mkdir -p config/jwt
           openssl genrsa -out config/jwt/private.pem -passout pass:b84fc9f4ec50346882262e2c99d0dd14816ee8c1861a91ba4df1ab80942eba04 2048
           openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem -passin pass:b84fc9f4ec50346882262e2c99d0dd14816ee8c1861a91ba4df1ab80942eba04
+
+      - name: Upload Vendor & Keys
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build
+          path: |
+            vendor/
+            config/jwt/
+          retention-days: 1
+
+  coding-standards:
+    name: Coding Standards (PHP CS Fixer)
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl
+          coverage: none
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+
+      - name: Check Coding Standards
+        run: composer cs-check
+
+  static-analysis:
+    name: Static Analysis (PHPStan)
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_mysql
+          coverage: none
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
+
+      - name: Run PHPStan
+        run: composer phpstan
+
+  tests:
+    name: Tests (PHPUnit)
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, intl, pdo_mysql, bcmath
+          coverage: none
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build
 
       - name: Run Tests
         run: composer test
