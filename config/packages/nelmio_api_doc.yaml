@@ -1,0 +1,27 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: Cinema API
+            description: Cinema Management API
+            version: 1.0.0
+        paths:
+            /api/health:
+                get:
+                    summary: Health check endpoint
+                    description: Returns API status and version information
+                    tags:
+                        - System
+                    responses:
+                        '200':
+                            description: API is healthy
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            status: { type: string, example: ok }
+                                            version: { type: string, example: 1.0.0 }
+                                            timestamp: { type: string, format: date-time }
+    areas: # to filter documented areas
+        path_patterns:
+            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
