@@ -2,26 +2,832 @@ nelmio_api_doc:
     documentation:
         info:
             title: Cinema API
-            description: Cinema Management API
+            description: |
+                Cinema Management API for managing movie halls, seats, and reservations.
+
+                ## Authentication
+                This API uses JWT (JSON Web Tokens) for authentication. To access protected endpoints,
+                include the JWT token in the Authorization header as: `Bearer {token}`.
+
+                ## Error Handling
+                All API errors follow a consistent structure with error details.
             version: 1.0.0
         paths:
-            /api/health:
-                get:
-                    summary: Health check endpoint
-                    description: Returns API status and version information
+            /api/v1/auth/login:
+                post:
                     tags:
-                        - System
+                        - Authentication
+                    summary: Authenticate user and get JWT token
+                    description: |
+                        Authenticates a user with email and password credentials.
+
+                        Returns a JWT token that must be included in the Authorization header
+                        for all subsequent API requests as: `Bearer {token}`.
+
+                        The token expires after the specified time in `expiresIn` field.
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: '#/components/schemas/LoginRequest'
+                                examples:
+                                    admin_login:
+                                        summary: Admin login example
+                                        value:
+                                            email: admin@cinema.com
+                                            password: admin
                     responses:
                         '200':
-                            description: API is healthy
+                            description: Authentication successful
                             content:
                                 application/json:
                                     schema:
-                                        type: object
-                                        properties:
-                                            status: { type: string, example: ok }
-                                            version: { type: string, example: 1.0.0 }
-                                            timestamp: { type: string, format: date-time }
-    areas: # to filter documented areas
+                                        $ref: '#/components/schemas/AuthResponse'
+                        '401':
+                            description: Invalid email or password
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InvalidCredentialsError'
+                        '422':
+                            description: Input validation failed
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ValidationError'
+
+            /api/v1/admin/halls:
+                post:
+                    summary: Create a new hall
+                    description: |
+                        Creates a new cinema hall with the specified dimensions.
+
+                        The system will automatically generate seats in a grid layout based on
+                        the provided rowsCount and seatsPerRow parameters. Total seats cannot
+                        exceed 2000 for performance reasons.
+
+                        **Note:** Requires admin authentication.
+                    tags:
+                        - Admin - Halls
+                    security:
+                        - Bearer: []
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    required: [name, rowsCount, seatsPerRow]
+                                    properties:
+                                        name:
+                                            type: string
+                                            maxLength: 255
+                                            description: Unique name for the hall
+                                            example: Hall A
+                                        rowsCount:
+                                            type: integer
+                                            minimum: 1
+                                            maximum: 100
+                                            description: Number of rows in the hall
+                                            example: 10
+                                        seatsPerRow:
+                                            type: integer
+                                            minimum: 1
+                                            maximum: 100
+                                            description: Number of seats per row
+                                            example: 15
+                                examples:
+                                    standard_hall:
+                                        summary: Standard hall creation
+                                        value:
+                                            name: Main Hall
+                                            rowsCount: 12
+                                            seatsPerRow: 20
+                                    small_hall:
+                                        summary: Small hall for private screenings
+                                        value:
+                                            name: VIP Hall
+                                            rowsCount: 5
+                                            seatsPerRow: 8
+                    responses:
+                        '201':
+                            description: Hall created successfully
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HallResponse'
+                        '401':
+                            description: Authentication required
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HttpError'
+                        '422':
+                            description: Validation error or total seats limit exceeded
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ValidationError'
+                        '500':
+                            description: Internal server error
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InternalError'
+                get:
+                    summary: List active halls
+                    description: |
+                        Returns a paginated list of all active (non-deleted) halls.
+
+                        Only halls with `isActive: true` are returned. Results are ordered
+                        by creation date (newest first).
+
+                        **Note:** Requires admin authentication.
+                    tags:
+                        - Admin - Halls
+                    security:
+                        - Bearer: []
+                    parameters:
+                        - name: page
+                          in: query
+                          schema:
+                              type: integer
+                              minimum: 1
+                              default: 1
+                          description: Page number (starts from 1)
+                          example: 1
+                        - name: limit
+                          in: query
+                          schema:
+                              type: integer
+                              minimum: 1
+                              maximum: 100
+                              default: 20
+                          description: Number of items per page
+                          example: 20
+                    responses:
+                        '200':
+                            description: Paginated list of active halls
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HallListResponse'
+                        '401':
+                            description: Authentication required
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HttpError'
+                        '422':
+                            description: Invalid pagination parameters
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ValidationError'
+            /api/v1/admin/halls/{id}:
+                get:
+                    summary: Get hall details
+                    description: |
+                        Returns detailed information about a specific hall by its ID.
+
+                        Only active halls can be retrieved. If the hall is deleted (soft delete)
+                        or doesn't exist, a 404 error is returned.
+
+                        **Note:** Requires admin authentication.
+                    tags:
+                        - Admin - Halls
+                    security:
+                        - Bearer: []
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          schema:
+                              type: integer
+                              minimum: 1
+                          description: Unique identifier of the hall
+                          example: 1
+                    responses:
+                        '200':
+                            description: Hall details retrieved successfully
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HallResponse'
+                        '401':
+                            description: Authentication required
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HttpError'
+                        '404':
+                            description: Hall not found or inactive
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/NotFoundError'
+                put:
+                    summary: Update hall name
+                    description: |
+                        Updates the name of an existing active hall.
+
+                        Only the name can be modified. The hall must be active and exist.
+                        Seat layout cannot be changed after creation for data integrity.
+
+                        **Note:** Requires admin authentication.
+                    tags:
+                        - Admin - Halls
+                    security:
+                        - Bearer: []
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          schema:
+                              type: integer
+                              minimum: 1
+                          description: Unique identifier of the hall to update
+                          example: 1
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    required: [name]
+                                    properties:
+                                        name:
+                                            type: string
+                                            maxLength: 255
+                                            description: New name for the hall
+                                            example: Hall A (VIP)
+                                examples:
+                                    rename_hall:
+                                        summary: Rename hall example
+                                        value:
+                                            name: Premium Hall
+                    responses:
+                        '200':
+                            description: Hall name updated successfully
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HallResponse'
+                        '401':
+                            description: Authentication required
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HttpError'
+                        '404':
+                            description: Hall not found or inactive
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/NotFoundError'
+                        '422':
+                            description: Validation error (invalid name)
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ValidationError'
+                        '500':
+                            description: Internal server error
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InternalError'
+                delete:
+                    summary: Delete hall (soft delete)
+                    description: |
+                        Soft deletes a hall by marking it as inactive (`isActive: false`).
+
+                        The hall data and seat information are preserved but the hall will no
+                        longer appear in active hall listings. This operation can be reversed
+                        by re-activating the hall through direct database access if needed.
+
+                        **Note:** Requires admin authentication.
+                    tags:
+                        - Admin - Halls
+                    security:
+                        - Bearer: []
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          schema:
+                              type: integer
+                              minimum: 1
+                          description: Unique identifier of the hall to delete
+                          example: 1
+                    responses:
+                        '204':
+                            description: Hall successfully marked as inactive
+                        '401':
+                            description: Authentication required
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/HttpError'
+                        '404':
+                            description: Hall not found
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/NotFoundError'
+                        '500':
+                            description: Internal server error
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InternalError'
+
+            /api/v1/bookings:
+                post:
+                    summary: Create a new booking
+                    description: |
+                        Creates a new seat reservation for a movie screening.
+
+                        **Process:**
+                        1. Validates that the screening exists and hasn't started yet
+                        2. Checks that all requested seats belong to the screening's hall
+                        3. Verifies that seats are not already booked (confirmed or held)
+                        4. Creates a booking with 10-minute hold period
+                        5. Reserves the seats by creating seat allocations
+
+                        The booking will be held for 10 minutes. During this time, the seats
+                        are reserved but not confirmed. After expiration, seats become available again.
+                    tags:
+                        - Public - Bookings
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    $ref: '#/components/schemas/CreateBookingRequest'
+                                examples:
+                                    standard_booking:
+                                        summary: Standard seat booking
+                                        value:
+                                            screeningId: 1
+                                            seatIds: [5, 6, 7]
+                                            customerEmail: user@example.com
+                                    single_seat:
+                                        summary: Single seat booking
+                                        value:
+                                            screeningId: 1
+                                            seatIds: [15]
+                                            customerEmail: vip@example.com
+                    responses:
+                        '201':
+                            description: Booking created successfully
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/BookingResponse'
+                        '404':
+                            description: Screening not found
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/NotFoundError'
+                        '409':
+                            description: Some seats are not available
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/SeatsUnavailableError'
+                        '422':
+                            description: Validation failed or invalid seats
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ValidationError'
+                        '500':
+                            description: Internal server error
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InternalError'
+
+            /api/v1/screenings/{id}/seats:
+                get:
+                    summary: Get available seats for screening
+                    description: |
+                        Returns a complete map of all seats in the screening hall with their current status.
+
+                        Each seat includes:
+                        - Seat ID, row number, and seat number
+                        - Status: 'available', 'held', or 'confirmed'
+                        - For held seats: expiration time when the reservation expires
+
+                        This endpoint is used by the frontend to display the seat selection UI,
+                        showing users which seats they can choose from.
+                    tags:
+                        - Public - Seats
+                    parameters:
+                        - name: id
+                          in: path
+                          required: true
+                          schema:
+                              type: integer
+                              minimum: 1
+                          description: Unique identifier of the screening
+                          example: 1
+                    responses:
+                        '200':
+                            description: Seat map retrieved successfully
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/AvailableSeatsResponse'
+                        '404':
+                            description: Screening not found
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/NotFoundError'
+                        '500':
+                            description: Internal server error
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InternalError'
+        components:
+            securitySchemes:
+                Bearer:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+            schemas:
+                InvalidCredentialsError:
+                    type: object
+                    description: Error response for invalid login credentials
+                    properties:
+                        error:
+                            type: object
+                            properties:
+                                type: { type: string, example: invalid_credentials, description: Error type identifier }
+                                message: { type: string, example: Invalid email or password, description: Human-readable error message }
+                                code: { type: integer, example: 401, description: HTTP status code }
+                LoginRequest:
+                    type: object
+                    description: User authentication credentials
+                    required:
+                        - email
+                        - password
+                    properties:
+                        email:
+                            type: string
+                            format: email
+                            description: User's email address
+                            example: admin@cinema.com
+                        password:
+                            type: string
+                            format: password
+                            description: User's password
+                            example: admin
+                AuthResponse:
+                    type: object
+                    description: Successful authentication response containing JWT token
+                    properties:
+                        token:
+                            type: string
+                            description: JWT token for API authentication
+                            example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                        expiresIn:
+                            type: integer
+                            description: Token expiration time in seconds
+                            example: 3600
+
+                HallResponse:
+                    type: object
+                    description: Cinema hall information
+                    properties:
+                        id:
+                            type: integer
+                            description: Unique hall identifier
+                            example: 1
+                        name:
+                            type: string
+                            description: Hall name
+                            example: Main Hall
+                        isActive:
+                            type: boolean
+                            description: Whether the hall is active (not soft-deleted)
+                            example: true
+                        totalSeats:
+                            type: integer
+                            description: Total number of seats in the hall
+                            example: 200
+                HallListResponse:
+                    type: object
+                    description: Paginated list of halls with metadata
+                    properties:
+                        data:
+                            type: array
+                            description: Array of hall objects
+                            items:
+                                $ref: '#/components/schemas/HallResponse'
+                        meta:
+                            type: object
+                            description: Pagination metadata
+                            properties:
+                                currentPage:
+                                    type: integer
+                                    description: Current page number
+                                    example: 1
+                                itemsPerPage:
+                                    type: integer
+                                    description: Number of items per page
+                                    example: 20
+                                totalItems:
+                                    type: integer
+                                    description: Total number of active halls
+                                    example: 5
+                                totalPages:
+                                    type: integer
+                                    description: Total number of pages
+                                    example: 1
+                ValidationError:
+                    type: object
+                    description: Validation error response with detailed field violations
+                    properties:
+                        error:
+                            type: object
+                            properties:
+                                type:
+                                    type: string
+                                    description: Error type identifier
+                                    example: validation_failed
+                                message:
+                                    type: string
+                                    description: General error message
+                                    example: Validation failed
+                                code:
+                                    type: integer
+                                    description: HTTP status code
+                                    example: 422
+                                details:
+                                    type: object
+                                    description: Detailed validation information
+                                    properties:
+                                        violations:
+                                            type: array
+                                            description: List of validation violations
+                                            items:
+                                                type: object
+                                                properties:
+                                                    field:
+                                                        type: string
+                                                        description: Field name that failed validation
+                                                        example: name
+                                                    message:
+                                                        type: string
+                                                        description: Specific validation error message
+                                                        example: This value should not be blank.
+                NotFoundError:
+                    type: object
+                    description: Entity not found error response
+                    properties:
+                        error:
+                            type: object
+                            properties:
+                                type:
+                                    type: string
+                                    description: Error type identifier
+                                    example: entity_not_found
+                                message:
+                                    type: string
+                                    description: Human-readable error message
+                                    example: Hall with ID 123 was not found
+                                code:
+                                    type: integer
+                                    description: HTTP status code
+                                    example: 404
+                                details:
+                                    type: object
+                                    description: Additional error context
+                                    properties:
+                                        entity:
+                                            type: string
+                                            description: Type of entity that was not found
+                                            example: Hall
+                                        id:
+                                            type: integer
+                                            description: ID of the entity that was not found
+                                            example: 123
+                HttpError:
+                    type: object
+                    description: Generic HTTP error response
+                    properties:
+                        error:
+                            type: object
+                            properties:
+                                type:
+                                    type: string
+                                    description: Error type identifier
+                                    example: http_error
+                                message:
+                                    type: string
+                                    description: HTTP error message
+                                    example: Unauthorized
+                                code:
+                                    type: integer
+                                    description: HTTP status code
+                                    example: 401
+                InternalError:
+                    type: object
+                    description: Internal server error response
+                    properties:
+                        error:
+                            type: object
+                            properties:
+                                type:
+                                    type: string
+                                    description: Error type identifier
+                                    example: internal_error
+                                message:
+                                    type: string
+                                    description: Generic internal error message
+                                    example: An error occurred while processing your request
+                                code:
+                                    type: integer
+                                    description: HTTP status code
+                                    example: 500
+
+                CreateBookingRequest:
+                    type: object
+                    description: Request to create a new seat booking
+                    required:
+                        - screeningId
+                        - seatIds
+                        - customerEmail
+                    properties:
+                        screeningId:
+                            type: integer
+                            minimum: 1
+                            description: ID of the movie screening
+                            example: 1
+                        seatIds:
+                            type: array
+                            description: List of seat IDs to reserve (1-10 seats)
+                            minItems: 1
+                            maxItems: 10
+                            items:
+                                type: integer
+                                minimum: 1
+                            example: [5, 6, 7]
+                        customerEmail:
+                            type: string
+                            format: email
+                            maxLength: 255
+                            description: Customer's email address
+                            example: user@example.com
+
+                BookingResponse:
+                    type: object
+                    description: Successful booking creation response
+                    properties:
+                        id:
+                            type: integer
+                            description: Unique booking identifier
+                            example: 42
+                        screeningId:
+                            type: integer
+                            description: ID of the screening
+                            example: 1
+                        customerEmail:
+                            type: string
+                            format: email
+                            description: Customer's email address
+                            example: user@example.com
+                        status:
+                            type: string
+                            enum: [HELD, CONFIRMED, EXPIRED, CANCELLED]
+                            description: Current booking status
+                            example: HELD
+                        createdAt:
+                            type: string
+                            format: date-time
+                            description: When the booking was created
+                            example: "2026-01-17T15:30:00+00:00"
+                        expiresAt:
+                            type: string
+                            format: date-time
+                            description: When the booking expires (null for confirmed bookings)
+                            example: "2026-01-17T15:40:00+00:00"
+                        seats:
+                            type: array
+                            description: List of reserved seats with details
+                            items:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        description: Seat ID
+                                        example: 5
+                                    row:
+                                        type: integer
+                                        description: Row number
+                                        example: 1
+                                    number:
+                                        type: integer
+                                        description: Seat number in the row
+                                        example: 5
+                                    status:
+                                        type: string
+                                        enum: [available, held, confirmed]
+                                        description: Current seat status
+                                        example: held
+                                    expiresAt:
+                                        type: string
+                                        format: date-time
+                                        nullable: true
+                                        description: When the seat reservation expires (null for confirmed)
+                                        example: "2026-01-17T15:40:00+00:00"
+
+                AvailableSeatsResponse:
+                    type: object
+                    description: Complete seat map for a screening hall
+                    properties:
+                        screeningId:
+                            type: integer
+                            description: ID of the screening
+                            example: 1
+                        hallName:
+                            type: string
+                            description: Name of the hall
+                            example: Hall A
+                        movieTitle:
+                            type: string
+                            description: Title of the movie being screened
+                            example: Inception
+                        startsAt:
+                            type: string
+                            format: date-time
+                            description: When the screening starts
+                            example: "2026-01-17T18:00:00+00:00"
+                        seats:
+                            type: array
+                            description: Complete list of all seats in the hall
+                            items:
+                                type: object
+                                properties:
+                                    id:
+                                        type: integer
+                                        description: Unique seat identifier
+                                        example: 1
+                                    row:
+                                        type: integer
+                                        description: Row number (1-based)
+                                        example: 1
+                                    number:
+                                        type: integer
+                                        description: Seat number in the row (1-based)
+                                        example: 1
+                                    status:
+                                        type: string
+                                        enum: [available, held, confirmed]
+                                        description: Current seat availability status
+                                        example: available
+                                    expiresAt:
+                                        type: string
+                                        format: date-time
+                                        nullable: true
+                                        description: When held reservation expires (null for available/confirmed)
+                                        example: "2026-01-17T15:40:00+00:00"
+
+                SeatsUnavailableError:
+                    type: object
+                    description: Error response when requested seats are not available
+                    properties:
+                        error:
+                            type: object
+                            properties:
+                                type:
+                                    type: string
+                                    example: seats_unavailable
+                                    description: Error type identifier
+                                message:
+                                    type: string
+                                    example: Seats 5, 6 are not available
+                                    description: Human-readable error message
+                                code:
+                                    type: integer
+                                    example: 409
+                                    description: HTTP status code
+                                details:
+                                    type: object
+                                    description: Additional error context
+                                    properties:
+                                        unavailable_seats:
+                                            type: array
+                                            description: List of seat IDs that are not available
+                                            items:
+                                                type: integer
+                                            example: [5, 6]
+    areas:
         path_patterns:
-            - ^/api(?!/doc$) # Accepts routes under /api except /api/doc
+            - ^/api(?!/doc$)

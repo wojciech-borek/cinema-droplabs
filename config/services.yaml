@@ -13,11 +13,23 @@ services:
     _defaults:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+        bind:
+            $environment: '%kernel.environment%'
 
-    # makes classes in src/ available to be used as services
-    # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/Kernel.php'
+            - '../src/DTO/'
+            - '../src/Entity/'
+            - '../src/Exception/'
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\Bus\Interface\CommandBusInterface:
+        class: App\Bus\MessengerCommandBus
+        arguments:
+            $commandBus: '@command_bus'
+
+    App\Bus\Interface\QueryBusInterface:
+        class: App\Bus\MessengerQueryBus
+        arguments:
+            $queryBus: '@query_bus'

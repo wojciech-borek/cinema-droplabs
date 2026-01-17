@@ -1,0 +1,30 @@
+framework:
+    messenger:
+        # Separate buses for Commands, Queries and Events (CQRS + Domain Events)
+        buses:
+            command_bus:
+                middleware:
+                    - doctrine_transaction
+                    - validation
+            query_bus:
+                middleware:
+                    - validation
+            event_bus:
+                default_middleware:
+                    enabled: true
+                    allow_no_handlers: false
+
+        # Default bus
+        default_bus: command_bus
+
+        transports:
+            # Sync transport for synchronous processing
+            sync: 'sync://'
+            
+            # Async transport (can be enabled later)
+            # async: '%env(MESSENGER_TRANSPORT_DSN)%'
+
+        routing:
+            # Commands and Queries will use default bus for now
+            # 'App\Application\Command\**\Command': command.bus
+            # 'App\Application\Query\**\Query': query.bus

@@ -19,7 +19,9 @@
         "symfony/dotenv": "8.0.*",
         "symfony/flex": "^2.10",
         "symfony/framework-bundle": "8.0.*",
+        "symfony/messenger": "8.0.*",
         "symfony/runtime": "8.0.*",
+        "symfony/security-bundle": "8.0.*",
         "symfony/serializer": "8.0.*",
         "symfony/validator": "8.0.*",
         "symfony/yaml": "8.0.*"
@@ -87,12 +89,14 @@
         }
     },
     "require-dev": {
+        "doctrine/doctrine-fixtures-bundle": "*",
         "friendsofphp/php-cs-fixer": ">=3.92.5",
         "phpstan/extension-installer": "^1.4.3",
         "phpstan/phpstan": "^2.1.33",
         "phpstan/phpstan-doctrine": "^2.0.12",
         "phpstan/phpstan-symfony": "^2.0.9",
         "phpunit/phpunit": "^11.5.47",
+        "symfony/maker-bundle": "*",
         "symfony/phpunit-bridge": "^8.0.3"
     }
 }
