@@ -8,6 +8,7 @@ use App\Exception\BookingExpiredException;
 use App\Exception\EntityNotFoundException;
 use App\Exception\InvalidCredentialsException;
 use App\Exception\InvalidSeatsException;
+use App\Exception\ScreeningStartedException;
 use App\Exception\SeatsUnavailableException;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -45,6 +46,7 @@ final readonly class GlobalExceptionListener
             $exception instanceof SeatsUnavailableException => $this->handleSeatsUnavailableException($exception),
             $exception instanceof InvalidSeatsException => $this->handleInvalidSeatsException($exception),
             $exception instanceof BookingExpiredException => $this->handleBookingExpiredException($exception),
+            $exception instanceof ScreeningStartedException => $this->handleScreeningStartedException($exception),
             $exception instanceof ValidationFailedException => $this->handleValidationException($exception),
             $exception instanceof UnprocessableEntityHttpException => $this->handleUnprocessableEntityException($exception),
             $exception instanceof HttpExceptionInterface => $this->handleHttpException($exception),
@@ -156,6 +158,18 @@ final readonly class GlobalExceptionListener
             type: 'booking_expired',
             message: $exception->getMessage(),
             code: Response::HTTP_GONE
+        );
+    }
+
+    private function handleScreeningStartedException(ScreeningStartedException $exception): JsonResponse
+    {
+        return $this->errorResponse(
+            type: 'screening_started',
+            message: $exception->getMessage(),
+            code: Response::HTTP_CONFLICT,
+            details: [
+                'screening_id' => $exception->getScreeningId(),
+            ]
         );
     }
 

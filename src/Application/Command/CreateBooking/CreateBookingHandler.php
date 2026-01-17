@@ -10,6 +10,7 @@ use App\Enum\AllocationStatus;
 use App\Exception\EntityIdGenerationException;
 use App\Exception\EntityNotFoundException;
 use App\Exception\InvalidSeatsException;
+use App\Exception\ScreeningStartedException;
 use App\Exception\SeatsUnavailableException;
 use App\Repository\Interface\ScreeningRepositoryInterface;
 use App\Repository\Interface\SeatAllocationRepositoryInterface;
@@ -40,7 +41,7 @@ final readonly class CreateBookingHandler
         }
 
         if ($screening->hasStarted()) {
-            throw new \DomainException('Cannot book seats for a screening that has already started');
+            throw new ScreeningStartedException($command->screeningId);
         }
 
         $validSeats = $this->seatRepository->findByIdsAndHall(

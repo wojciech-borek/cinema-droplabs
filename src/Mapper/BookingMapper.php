@@ -19,7 +19,7 @@ final class BookingMapper
         return new BookingResponse(
             id: $booking->getId() ?? throw new EntityIdGenerationException('Booking'),
             screeningId: $booking->getScreening()->getId() ?? throw new EntityIdGenerationException('Screening'),
-            customerEmail: $booking->getCustomerEmail(),
+            customerEmail: $booking->getCustomerEmail()->toString(),
             status: $booking->getStatus(),
             createdAt: $booking->getCreatedAt(),
             expiresAt: $booking->getExpiresAt(),

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\ValueObject\MovieTitle;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
@@ -27,11 +28,11 @@ class Screening
 
     public function __construct(
         Hall $hall,
-        string $movieTitle,
+        MovieTitle $movieTitle,
         \DateTimeImmutable $startsAt
     ) {
         $this->hall = $hall;
-        $this->movieTitle = $movieTitle;
+        $this->movieTitle = $movieTitle->toString();
         $this->startsAt = $startsAt;
     }
 
@@ -45,9 +46,9 @@ class Screening
         return $this->hall;
     }
 
-    public function getMovieTitle(): string
+    public function getMovieTitle(): MovieTitle
     {
-        return $this->movieTitle;
+        return MovieTitle::fromString($this->movieTitle);
     }
 
     public function getStartsAt(): \DateTimeImmutable

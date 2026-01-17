@@ -6,6 +6,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Screening;
 use App\Repository\HallRepository;
+use App\ValueObject\MovieTitle;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Common\DataFixtures\DependentFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
@@ -29,7 +30,7 @@ class ScreeningFixtures extends Fixture implements DependentFixtureInterface
 
         $screening = new Screening(
             hall: $hall,
-            movieTitle: 'Inception',
+            movieTitle: MovieTitle::fromString('Inception'),
             startsAt: new \DateTimeImmutable('+2 hours')
         );
 

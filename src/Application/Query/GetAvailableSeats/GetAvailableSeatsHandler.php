@@ -52,7 +52,7 @@ final readonly class GetAvailableSeatsHandler
         return new AvailableSeatsResponse(
             screeningId: $screening->getId() ?? throw new EntityIdGenerationException('Screening'),
             hallName: $screening->getHall()->getName(),
-            movieTitle: $screening->getMovieTitle(),
+            movieTitle: $screening->getMovieTitle()->toString(),
             startsAt: $screening->getStartsAt(),
             seats: $seats
         );

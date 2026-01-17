@@ -22,23 +22,45 @@ final class HallTest extends TestCase
         $this->assertCount(2, $hall->getSeats());
     }
 
-    public function testInvalidRowNumberThrowsException(): void
+    /**
+     * @dataProvider invalidSeatDataProvider
+     */
+    public function testInvalidSeatCreationThrowsException(int $row, int $seatNumber, string $expectedMessage): void
     {
         $hall = new Hall('Test Hall');
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Row number must be positive.');
+        $this->expectExceptionMessage($expectedMessage);
 
-        new Seat($hall, 0, 1);
+        new Seat($hall, $row, $seatNumber);
     }
 
-    public function testInvalidSeatNumberThrowsException(): void
+    /**
+     * @return array<array<int|string>>
+     */
+    public static function invalidSeatDataProvider(): array
     {
-        $hall = new Hall('Test Hall');
-
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Seat number must be positive.');
-
-        new Seat($hall, 1, -1);
+        return [
+            'negative row number' => [
+                -1,
+                1,
+                'Row number must be positive.',
+            ],
+            'zero row number' => [
+                0,
+                1,
+                'Row number must be positive.',
+            ],
+            'negative seat number' => [
+                1,
+                -1,
+                'Seat number must be positive.',
+            ],
+            'zero seat number' => [
+                1,
+                0,
+                'Seat number must be positive.',
+            ],
+        ];
     }
 }

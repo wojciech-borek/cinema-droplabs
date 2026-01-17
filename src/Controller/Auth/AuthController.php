@@ -9,6 +9,7 @@ use App\Bus\Interface\CommandBusInterface;
 use App\DTO\Request\LoginRequest;
 use App\DTO\Response\AuthResponse;
 use App\Exception\InvalidCredentialsException;
+use App\ValueObject\EmailAddress;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,7 +32,7 @@ final class AuthController extends AbstractController
     ): JsonResponse {
         try {
             $command = new LoginUserCommand(
-                email: $request->email,
+                email: EmailAddress::fromString($request->email),
                 password: $request->password,
             );
 

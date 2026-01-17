@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Enum\AllocationStatus;
+use App\ValueObject\EmailAddress;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -49,11 +50,11 @@ class Booking
 
     public function __construct(
         Screening $screening,
-        string $customerEmail,
+        EmailAddress $customerEmail,
         \DateTimeImmutable $expiresAt
     ) {
         $this->screening = $screening;
-        $this->customerEmail = $customerEmail;
+        $this->customerEmail = $customerEmail->toString();
         $this->expiresAt = $expiresAt;
         $this->createdAt = new \DateTimeImmutable();
         $this->status = AllocationStatus::HELD->value;
@@ -115,9 +116,9 @@ class Booking
         return $this->screening;
     }
 
-    public function getCustomerEmail(): string
+    public function getCustomerEmail(): EmailAddress
     {
-        return $this->customerEmail;
+        return EmailAddress::fromString($this->customerEmail);
     }
 
     public function getCreatedAt(): \DateTimeImmutable

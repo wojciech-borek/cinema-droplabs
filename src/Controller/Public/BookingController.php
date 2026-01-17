@@ -11,6 +11,7 @@ use App\Bus\Interface\QueryBusInterface;
 use App\DTO\Request\CreateBookingRequest;
 use App\DTO\Response\BookingResponse;
 use App\Exception\EntityIdGenerationException;
+use App\ValueObject\EmailAddress;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -34,7 +35,7 @@ final class BookingController extends AbstractController
         $command = new CreateBookingCommand(
             screeningId: $request->screeningId,
             seatIds: $request->seatIds,
-            customerEmail: $request->customerEmail,
+            customerEmail: EmailAddress::fromString($request->customerEmail),
         );
 
         $bookingId = $this->commandBus->dispatch($command);

@@ -23,7 +23,7 @@ final readonly class LoginUserHandler
 
     public function __invoke(LoginUserCommand $command): AuthResponse
     {
-        $user = $this->userRepository->findByEmail($command->email);
+        $user = $this->userRepository->findByEmail($command->email->toString());
 
         if (!$user || !$this->passwordHasher->isPasswordValid($user, $command->password)) {
             throw InvalidCredentialsException::create();
