@@ -15,6 +15,7 @@ final readonly class GetHallHandler
 {
     public function __construct(
         private HallRepository $hallRepository,
+        private HallMapper $hallMapper,
     ) {
     }
 
@@ -26,6 +27,6 @@ final readonly class GetHallHandler
             throw new EntityNotFoundException('Hall', $query->id);
         }
 
-        return HallMapper::mapToResponse($hall);
+        return $this->hallMapper->mapToResponse($hall);
     }
 }

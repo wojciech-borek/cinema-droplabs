@@ -14,6 +14,7 @@ final readonly class ListHallsHandler
 {
     public function __construct(
         private HallRepository $hallRepository,
+        private HallMapper $hallMapper,
     ) {
     }
 
@@ -24,7 +25,7 @@ final readonly class ListHallsHandler
             limit: $query->limit
         );
 
-        return HallMapper::mapToListResponse(
+        return $this->hallMapper->mapToListResponse(
             halls: $result['data'],
             currentPage: $query->page,
             itemsPerPage: $query->limit,

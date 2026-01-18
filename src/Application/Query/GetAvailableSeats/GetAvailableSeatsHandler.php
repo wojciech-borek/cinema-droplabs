@@ -20,6 +20,7 @@ final readonly class GetAvailableSeatsHandler
         private ScreeningRepositoryInterface $screeningRepository,
         private SeatRepositoryInterface $seatRepository,
         private SeatStatusResolverInterface $seatStatusResolver,
+        private SeatMapper $seatMapper,
     ) {
     }
 
@@ -47,7 +48,7 @@ final readonly class GetAvailableSeatsHandler
             $seatsWithAllocations
         );
 
-        $seats = SeatMapper::mapFromDataArray($seatsWithStatus);
+        $seats = $this->seatMapper->mapFromDataArray($seatsWithStatus);
 
         return new AvailableSeatsResponse(
             screeningId: $screening->getId() ?? throw new EntityIdGenerationException('Screening'),

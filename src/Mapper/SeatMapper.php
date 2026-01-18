@@ -12,7 +12,7 @@ use App\Exception\EntityIdGenerationException;
 
 final class SeatMapper
 {
-    public static function mapFromAllocation(SeatAllocation $allocation): SeatResponse
+    public function mapFromAllocation(SeatAllocation $allocation): SeatResponse
     {
         $status = match ($allocation->getStatus()) {
             AllocationStatus::CONFIRMED->value => SeatStatus::CONFIRMED->value,
@@ -34,10 +34,10 @@ final class SeatMapper
      *
      * @return SeatResponse[]
      */
-    public static function mapFromAllocations(array $allocations): array
+    public function mapFromAllocations(array $allocations): array
     {
         return array_map(
-            fn (SeatAllocation $allocation) => self::mapFromAllocation($allocation),
+            fn (SeatAllocation $allocation) => $this->mapFromAllocation($allocation),
             $allocations
         );
     }
@@ -47,7 +47,7 @@ final class SeatMapper
      *
      * @return SeatResponse[]
      */
-    public static function mapFromDataArray(array $data): array
+    public function mapFromDataArray(array $data): array
     {
         return array_map(
             fn (array $item) => new SeatResponse(

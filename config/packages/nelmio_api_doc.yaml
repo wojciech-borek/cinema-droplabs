@@ -411,6 +411,60 @@ nelmio_api_doc:
                                     schema:
                                         $ref: '#/components/schemas/InternalError'
 
+            /api/v1/screenings:
+                get:
+                    summary: List screenings with available seats count
+                    description: |
+                        Returns a paginated list of all movie screenings with the count of available seats.
+
+                        Each screening includes:
+                        - Screening details (movie title, hall name, start time)
+                        - Number of available seats (seats that are not held or confirmed)
+
+                        This endpoint is used by the frontend to display the movie schedule
+                        and allow users to quickly see how many seats are available for each screening.
+
+                        **Note:** Only screenings in active halls are returned.
+                    tags:
+                        - Public - Screenings
+                    parameters:
+                        - name: page
+                          in: query
+                          schema:
+                              type: integer
+                              minimum: 1
+                              default: 1
+                          description: Page number (starts from 1)
+                          example: 1
+                        - name: limit
+                          in: query
+                          schema:
+                              type: integer
+                              minimum: 1
+                              maximum: 100
+                              default: 20
+                          description: Number of items per page
+                          example: 20
+                    responses:
+                        '200':
+                            description: Paginated list of screenings with available seats
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ScreeningListResponse'
+                        '422':
+                            description: Invalid pagination parameters
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/ValidationError'
+                        '500':
+                            description: Internal server error
+                            content:
+                                application/json:
+                                    schema:
+                                        $ref: '#/components/schemas/InternalError'
+
             /api/v1/screenings/{id}/seats:
                 get:
                     summary: Get available seats for screening
@@ -550,6 +604,60 @@ nelmio_api_doc:
                                     type: integer
                                     description: Total number of pages
                                     example: 1
+                ScreeningResponse:
+                    type: object
+                    description: Movie screening with available seats count
+                    properties:
+                        id:
+                            type: integer
+                            description: Unique screening identifier
+                            example: 1
+                        hallName:
+                            type: string
+                            description: Name of the cinema hall
+                            example: Main Hall
+                        movieTitle:
+                            type: string
+                            description: Title of the movie being screened
+                            example: Inception
+                        startsAt:
+                            type: string
+                            format: date-time
+                            description: When the screening starts
+                            example: "2026-01-17T18:00:00+00:00"
+                        availableSeatsCount:
+                            type: integer
+                            description: Number of available seats for this screening
+                            example: 150
+                ScreeningListResponse:
+                    type: object
+                    description: Paginated list of screenings with available seats
+                    properties:
+                        data:
+                            type: array
+                            description: Array of screening objects with seat information
+                            items:
+                                $ref: '#/components/schemas/ScreeningResponse'
+                        meta:
+                            type: object
+                            description: Pagination metadata
+                            properties:
+                                currentPage:
+                                    type: integer
+                                    description: Current page number
+                                    example: 1
+                                itemsPerPage:
+                                    type: integer
+                                    description: Number of items per page
+                                    example: 20
+                                totalItems:
+                                    type: integer
+                                    description: Total number of screenings
+                                    example: 25
+                                totalPages:
+                                    type: integer
+                                    description: Total number of pages
+                                    example: 2
                 ValidationError:
                     type: object
                     description: Validation error response with detailed field violations

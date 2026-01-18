@@ -15,6 +15,7 @@ final readonly class GetBookingHandler
 {
     public function __construct(
         private BookingRepositoryInterface $bookingRepository,
+        private BookingMapper $bookingMapper,
     ) {
     }
 
@@ -26,6 +27,6 @@ final readonly class GetBookingHandler
             throw new EntityNotFoundException('Booking', $query->bookingId);
         }
 
-        return BookingMapper::mapToResponse($booking);
+        return $this->bookingMapper->mapToResponse($booking);
     }
 }

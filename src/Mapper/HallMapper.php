@@ -12,7 +12,7 @@ use App\Exception\EntityIdGenerationException;
 
 final class HallMapper
 {
-    public static function mapToResponse(Hall $hall): HallResponse
+    public function mapToResponse(Hall $hall): HallResponse
     {
         $id = $hall->getId();
 
@@ -31,10 +31,10 @@ final class HallMapper
     /**
      * @param Hall[] $halls
      */
-    public static function mapToListResponse(array $halls, int $currentPage, int $itemsPerPage, int $totalItems): HallListResponse
+    public function mapToListResponse(array $halls, int $currentPage, int $itemsPerPage, int $totalItems): HallListResponse
     {
         $data = array_map(
-            static fn (Hall $hall) => self::mapToResponse($hall),
+            fn (Hall $hall) => $this->mapToResponse($hall),
             $halls
         );
 

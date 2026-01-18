@@ -10,9 +10,14 @@ use App\Exception\EntityIdGenerationException;
 
 final class BookingMapper
 {
-    public static function mapToResponse(Booking $booking): BookingResponse
+    public function __construct(
+        private readonly SeatMapper $seatMapper,
+    ) {
+    }
+
+    public function mapToResponse(Booking $booking): BookingResponse
     {
-        $seats = SeatMapper::mapFromAllocations(
+        $seats = $this->seatMapper->mapFromAllocations(
             $booking->getAllocations()->toArray()
         );
 
