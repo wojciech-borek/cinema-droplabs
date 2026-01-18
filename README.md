@@ -45,6 +45,7 @@ docker-compose exec php php bin/console test
 ## Endpointy API
 
 ### Publiczne
+- `GET /api/v1/screenings` - Lista seansów
 - `GET /api/v1/screenings/{id}/seats` - Pobierz dostępne miejsca na seans
 - `POST /api/v1/bookings` - Utwórz rezerwację
 
