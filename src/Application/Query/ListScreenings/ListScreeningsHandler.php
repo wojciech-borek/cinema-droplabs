@@ -15,7 +15,8 @@ final readonly class ListScreeningsHandler
     public function __construct(
         private ScreeningRepositoryInterface $screeningRepository,
         private ScreeningMapper $screeningMapper,
-    ) {}
+    ) {
+    }
 
     public function __invoke(ListScreeningsQuery $query): ScreeningListResponse
     {

@@ -23,7 +23,8 @@ final class BookingController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
-    ) {}
+    ) {
+    }
 
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(
@@ -37,6 +38,10 @@ final class BookingController extends AbstractController
         );
 
         $bookingId = $this->commandBus->dispatch($command);
+
+        if (!is_int($bookingId)) {
+            throw new EntityIdGenerationException('Booking');
+        }
 
         $query = new GetBookingQuery(bookingId: $bookingId);
 
