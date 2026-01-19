@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace App\Repository;
 
 use App\Entity\Hall;
+use App\Repository\Interface\HallRepositoryInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
  * @extends ServiceEntityRepository<Hall>
  */
-final class HallRepository extends ServiceEntityRepository
+final class HallRepository extends ServiceEntityRepository implements HallRepositoryInterface
 {
     public function __construct(ManagerRegistry $registry)
     {

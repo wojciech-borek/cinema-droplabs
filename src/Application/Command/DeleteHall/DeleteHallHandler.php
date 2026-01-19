@@ -6,14 +6,14 @@ namespace App\Application\Command\DeleteHall;
 
 use App\Entity\Hall;
 use App\Exception\EntityNotFoundException;
-use App\Repository\HallRepository;
+use App\Repository\Interface\HallRepositoryInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(bus: 'command_bus')]
 final readonly class DeleteHallHandler
 {
     public function __construct(
-        private HallRepository $hallRepository,
+        private HallRepositoryInterface $hallRepository,
     ) {
     }
 

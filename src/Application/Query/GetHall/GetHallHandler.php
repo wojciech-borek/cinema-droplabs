@@ -7,14 +7,14 @@ namespace App\Application\Query\GetHall;
 use App\DTO\Response\HallResponse;
 use App\Exception\EntityNotFoundException;
 use App\Mapper\HallMapper;
-use App\Repository\HallRepository;
+use App\Repository\Interface\HallRepositoryInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(bus: 'query_bus')]
 final readonly class GetHallHandler
 {
     public function __construct(
-        private HallRepository $hallRepository,
+        private HallRepositoryInterface $hallRepository,
         private HallMapper $hallMapper,
     ) {
     }

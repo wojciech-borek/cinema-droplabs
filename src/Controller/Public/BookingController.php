@@ -11,7 +11,6 @@ use App\Bus\Interface\QueryBusInterface;
 use App\DTO\Request\CreateBookingRequest;
 use App\DTO\Response\BookingResponse;
 use App\Exception\EntityIdGenerationException;
-use App\ValueObject\EmailAddress;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -24,8 +23,7 @@ final class BookingController extends AbstractController
     public function __construct(
         private readonly CommandBusInterface $commandBus,
         private readonly QueryBusInterface $queryBus,
-    ) {
-    }
+    ) {}
 
     #[Route('', name: 'create', methods: ['POST'])]
     public function create(
@@ -35,14 +33,10 @@ final class BookingController extends AbstractController
         $command = new CreateBookingCommand(
             screeningId: $request->screeningId,
             seatIds: $request->seatIds,
-            customerEmail: EmailAddress::fromString($request->customerEmail),
+            customerEmail: $request->customerEmail,
         );
 
         $bookingId = $this->commandBus->dispatch($command);
-
-        if (!is_int($bookingId)) {
-            throw new EntityIdGenerationException('Booking');
-        }
 
         $query = new GetBookingQuery(bookingId: $bookingId);
 

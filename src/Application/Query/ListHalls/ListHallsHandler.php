@@ -6,14 +6,14 @@ namespace App\Application\Query\ListHalls;
 
 use App\DTO\Response\HallListResponse;
 use App\Mapper\HallMapper;
-use App\Repository\HallRepository;
+use App\Repository\Interface\HallRepositoryInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(bus: 'query_bus')]
 final readonly class ListHallsHandler
 {
     public function __construct(
-        private HallRepository $hallRepository,
+        private HallRepositoryInterface $hallRepository,
         private HallMapper $hallMapper,
     ) {
     }

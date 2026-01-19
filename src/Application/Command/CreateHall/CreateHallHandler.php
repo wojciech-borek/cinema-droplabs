@@ -6,7 +6,7 @@ namespace App\Application\Command\CreateHall;
 
 use App\Entity\Hall;
 use App\Exception\EntityIdGenerationException;
-use App\Repository\HallRepository;
+use App\Repository\Interface\HallRepositoryInterface;
 use App\Service\SeatGeneratorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -15,7 +15,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 final readonly class CreateHallHandler
 {
     public function __construct(
-        private HallRepository $hallRepository,
+        private HallRepositoryInterface $hallRepository,
         private SeatGeneratorService $seatGenerator,
         private EntityManagerInterface $entityManager,
     ) {

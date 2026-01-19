@@ -13,6 +13,7 @@ use App\Exception\InvalidSeatsException;
 use App\Exception\ScreeningStartedException;
 use App\Exception\SeatsUnavailableException;
 use App\Repository\Interface\ScreeningRepositoryInterface;
+use App\ValueObject\EmailAddress;
 use App\Repository\Interface\SeatAllocationRepositoryInterface;
 use App\Repository\Interface\SeatRepositoryInterface;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
@@ -66,7 +67,7 @@ final readonly class CreateBookingHandler
 
         $booking = new Booking(
             screening: $screening,
-            customerEmail: $command->customerEmail,
+            customerEmail: EmailAddress::fromString($command->customerEmail),
             expiresAt: $expiresAt
         );
 

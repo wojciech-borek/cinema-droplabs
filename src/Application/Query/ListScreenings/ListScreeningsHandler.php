@@ -6,17 +6,16 @@ namespace App\Application\Query\ListScreenings;
 
 use App\DTO\Response\ScreeningListResponse;
 use App\Mapper\ScreeningMapper;
-use App\Repository\ScreeningRepository;
+use App\Repository\Interface\ScreeningRepositoryInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler(bus: 'query_bus')]
 final readonly class ListScreeningsHandler
 {
     public function __construct(
-        private ScreeningRepository $screeningRepository,
+        private ScreeningRepositoryInterface $screeningRepository,
         private ScreeningMapper $screeningMapper,
-    ) {
-    }
+    ) {}
 
     public function __invoke(ListScreeningsQuery $query): ScreeningListResponse
     {

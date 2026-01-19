@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Application\Command\CreateBooking;
 
-use App\ValueObject\EmailAddress;
-
 final readonly class CreateBookingCommand
 {
     /**
@@ -14,7 +12,7 @@ final readonly class CreateBookingCommand
     public function __construct(
         public int $screeningId,
         public array $seatIds,
-        public EmailAddress $customerEmail,
+        public string $customerEmail,
     ) {
     }
 }
